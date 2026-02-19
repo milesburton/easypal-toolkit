@@ -40,6 +40,8 @@ export interface DecodeImageResult {
   width: number;
   height: number;
   diagnostics: DecodeDiagnostics;
+  /** Raw JPEG bytes extracted from the MSC bitstream, if reassembly succeeded. */
+  jpegBytes?: Uint8Array;
 }
 
 export interface WorkerDecodeRequest {
@@ -54,6 +56,8 @@ export interface WorkerResultMessage {
   width: number;
   height: number;
   diagnostics: DecodeDiagnostics;
+  /** Raw JPEG bytes for async decode on the main thread, if available. */
+  jpegBytes?: Uint8Array;
 }
 
 export interface WorkerErrorMessage {

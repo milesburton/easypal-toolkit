@@ -74,6 +74,27 @@ function pixelsToDataUrl(pixels: Uint8ClampedArray, width: number, height: numbe
   return canvas.toDataURL('image/png');
 }
 
+/**
+ * Decode raw JPEG bytes to a PNG data URL using the browser's native image decoder.
+ * Returns null if decoding fails (e.g. corrupt data).
+ */
+async function jpegBytesToDataUrl(jpegBytes: Uint8Array): Promise<string | null> {
+  try {
+    const blob = new Blob([jpegBytes], { type: 'image/jpeg' });
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close();
+    return canvas.toDataURL('image/png');
+  } catch {
+    return null;
+  }
+}
+
 export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError, onReset }: Props) {
   const [processing, setProcessing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -90,7 +111,10 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
         if (msg.type === 'error') {
           onError(msg.message);
         } else {
-          const imageUrl = pixelsToDataUrl(msg.pixels, msg.width, msg.height);
+          // Prefer real JPEG decode on the main thread; fall back to placeholder pixels.
+          const imageUrl =
+            (msg.jpegBytes && (await jpegBytesToDataUrl(msg.jpegBytes))) ||
+            pixelsToDataUrl(msg.pixels, msg.width, msg.height);
           onResult({
             url: imageUrl,
             filename: `drm_decoded_${Date.now()}.png`,

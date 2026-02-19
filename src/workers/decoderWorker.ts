@@ -14,9 +14,12 @@ self.onmessage = (event: MessageEvent<WorkerDecodeRequest>) => {
       width: result.width,
       height: result.height,
       diagnostics: result.diagnostics,
+      jpegBytes: result.jpegBytes,
     };
 
-    self.postMessage(msg, [result.pixels.buffer]);
+    const transferables: Transferable[] = [result.pixels.buffer];
+    if (result.jpegBytes) transferables.push(result.jpegBytes.buffer);
+    self.postMessage(msg, transferables);
   } catch (err) {
     const msg: WorkerOutboundMessage = {
       type: 'error',

@@ -5,11 +5,15 @@ import { DecoderPanel } from './DecoderPanel.js';
 
 const GOOD_PIXELS = new Uint8ClampedArray(320 * 240 * 4).fill(128);
 
+// Minimal JPEG: SOI + APP0 marker + EOI
+const MINIMAL_JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x01, 0xff, 0xd9]);
+
 const GOOD_RESULT: WorkerOutboundMessage = {
   type: 'result',
   pixels: GOOD_PIXELS,
   width: 320,
   height: 240,
+  jpegBytes: MINIMAL_JPEG,
   diagnostics: {
     mode: 'DRM Mode B',
     sampleRate: 48000,
@@ -92,6 +96,11 @@ describe('DecoderPanel', () => {
       vi.fn().mockResolvedValue({
         blob: () => Promise.resolve(new Blob(['audio'], { type: 'audio/wav' })),
       })
+    );
+    // Stub createImageBitmap so the main-thread JPEG decode path works in tests
+    vi.stubGlobal(
+      'createImageBitmap',
+      vi.fn().mockResolvedValue({ width: 4, height: 4, close: () => undefined })
     );
     Element.prototype.scrollIntoView = vi.fn();
   });
@@ -236,6 +245,43 @@ describe('DecoderPanel', () => {
     expect(msg?.type).toBe('decode');
     expect(msg?.samples).toBeInstanceOf(Float32Array);
     expect(msg?.sampleRate).toBe(48000);
+  });
+
+  it('uses createImageBitmap to decode jpegBytes from worker result', async () => {
+    const onResult = vi.fn();
+    render(
+      <DecoderPanel
+        triggerUrl="examples/iss-test.wav"
+        onResult={onResult}
+        onError={noop}
+        onReset={noop}
+      />
+    );
+
+    await waitFor(() => {
+      expect(createImageBitmap).toHaveBeenCalled();
+    });
+  });
+
+  it('falls back to placeholder pixels when jpegBytes is absent', async () => {
+    nextWorkerResult = { ...GOOD_RESULT, jpegBytes: undefined };
+    const onResult = vi.fn();
+    render(
+      <DecoderPanel
+        triggerUrl="examples/iss-test.wav"
+        onResult={onResult}
+        onError={noop}
+        onReset={noop}
+      />
+    );
+
+    await waitFor(() => {
+      expect(onResult).toHaveBeenCalledWith(
+        expect.objectContaining({ url: expect.stringMatching(/^data:image\/png;base64,/) })
+      );
+    });
+    // createImageBitmap should NOT have been called (no jpegBytes to decode)
+    expect(createImageBitmap).not.toHaveBeenCalled();
   });
 
   it('decodes MP3 files via AudioContext on the main thread', async () => {

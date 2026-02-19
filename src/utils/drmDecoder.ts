@@ -220,9 +220,8 @@ export class DRMDecoder {
         : undefined
     );
 
-    // 11. Decode JPEG synchronously via a placeholder — real decode happens async
-    // For the synchronous worker path we must return pixels immediately.
-    // We attempt a best-effort sync JPEG decode; if it fails, return grey placeholder.
+    // 11. Return placeholder pixels for immediate display; also forward raw JPEG bytes
+    // so the main thread can async-decode them into real pixels via createImageBitmap.
     const { pixels, width, height } = decodeSyncFallback(reassembled);
 
     const quality = analyzeImageQuality(pixels, width, height);
@@ -243,7 +242,7 @@ export class DRMDecoder {
       quality,
     };
 
-    return { pixels, width, height, diagnostics };
+    return { pixels, width, height, diagnostics, jpegBytes: reassembled ?? undefined };
   }
 }
 
