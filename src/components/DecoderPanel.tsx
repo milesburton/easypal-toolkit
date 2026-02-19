@@ -26,8 +26,12 @@ const AudioIcon = () => (
   </svg>
 );
 
-async function decodeAudioBuffer(buffer: ArrayBuffer): Promise<{ samples: Float32Array; sampleRate: number }> {
-  const AudioCtx = window.AudioContext ?? (window as unknown as Record<string, typeof AudioContext>).webkitAudioContext;
+async function decodeAudioBuffer(
+  buffer: ArrayBuffer
+): Promise<{ samples: Float32Array; sampleRate: number }> {
+  const AudioCtx =
+    window.AudioContext ??
+    (window as unknown as Record<string, typeof AudioContext>).webkitAudioContext;
   if (!AudioCtx) throw new Error('Web Audio API is not available in this browser.');
   const ctx = new AudioCtx();
   try {
@@ -38,7 +42,10 @@ async function decodeAudioBuffer(buffer: ArrayBuffer): Promise<{ samples: Float3
   }
 }
 
-function decodeWithWorker(samples: Float32Array, sampleRate: number): Promise<WorkerOutboundMessage> {
+function decodeWithWorker(
+  samples: Float32Array,
+  sampleRate: number
+): Promise<WorkerOutboundMessage> {
   return new Promise((resolve) => {
     const worker = new Worker(new URL('../workers/decoderWorker.ts', import.meta.url), {
       type: 'module',
@@ -86,7 +93,7 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
           const imageUrl = pixelsToDataUrl(msg.pixels, msg.width, msg.height);
           onResult({
             url: imageUrl,
-            filename: `easypal_decoded_${Date.now()}.png`,
+            filename: `drm_decoded_${Date.now()}.png`,
             diagnostics: msg.diagnostics,
           });
         }
@@ -134,13 +141,15 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
     <div ref={panelRef} className="bg-transparent">
       <div className="text-center mb-6 pb-5 border-b border-white/10">
         <h2 className="text-white text-xl font-semibold tracking-wide">Decoder</h2>
-        <p className="text-white/40 text-xs mt-1">Digital SSTV/EasyPal (PSK Modulation)</p>
-        <p className="text-amber-400/60 text-xs mt-1">⚠️ Placeholder - Not implemented</p>
+        <p className="text-white/40 text-xs mt-1">DRM Mode B · OFDM · 16-QAM</p>
+        <p className="text-amber-400/60 text-xs mt-1">
+          ⚠️ Best-effort — coarse sync only; real EasyPal recordings may not decode
+        </p>
       </div>
 
       <div className="mb-5 h-9 flex items-center justify-center gap-3 text-sm">
         <p className="text-white/50 text-xs uppercase tracking-wider font-medium">
-          Automatic mode detection via VIS code
+          Drop audio to attempt DRM decode
         </p>
       </div>
 

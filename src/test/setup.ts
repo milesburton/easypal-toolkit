@@ -36,7 +36,7 @@ global.URL.createObjectURL = (blob: Blob) => {
   return blobId;
 };
 
-global.URL.revokeObjectURL = () => {};
+global.URL.revokeObjectURL = () => undefined;
 
 const OriginalImage = Image;
 (global as unknown as Record<string, unknown>).Image = class extends OriginalImage {

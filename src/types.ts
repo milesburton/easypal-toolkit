@@ -1,17 +1,3 @@
-export interface EasyPalMode {
-  name: string;
-  visCode: number;
-  scanTime: number;
-  lines: number;
-  width: number;
-  colorScan: boolean;
-  syncPulse: number;
-  syncPorch: number;
-  separatorPulse?: number;
-  componentTime?: number;
-  colorFormat: 'YUV' | 'RGB' | 'PD';
-}
-
 export interface ImageQuality {
   rAvg: number;
   gAvg: number;
@@ -22,15 +8,26 @@ export interface ImageQuality {
 }
 
 export interface DecodeDiagnostics {
+  /** Human-readable mode name, e.g. "DRM Mode B". */
   mode: string;
-  visCode: number | null;
   sampleRate: number;
   fileDuration: string | null;
+  /** Estimated carrier frequency offset in Hz. */
   freqOffset: number;
-  autoCalibrate: boolean;
-  visEndPos: number | null;
-  decodeTimeMs: number;
-  quality: ImageQuality;
+  /** DRM robustness mode letter, e.g. "B". */
+  transmissionMode: string | null;
+  /** Spectrum occupancy identifier, e.g. "SO_0". */
+  spectrumOccupancy: string | null;
+  /** Effective FEC code rate, e.g. "1/2". */
+  fecRate: string | null;
+  /** Estimated SNR in dB (from pilot cells). */
+  snrDb: number | null;
+  /** Number of OFDM frames successfully demodulated. */
+  framesDecoded: number;
+  /** Number of MSC segments that failed CRC. */
+  segmentErrors: number;
+  decodeTimeMs: number | null;
+  quality: ImageQuality | null;
 }
 
 export interface DecodeResult {
@@ -69,12 +66,15 @@ export type WorkerOutboundMessage = WorkerResultMessage | WorkerErrorMessage;
 export interface EncodeResult {
   url: string;
   filename: string;
+  /** Mode description, e.g. "DRM Mode B SO_0". */
   mode: string;
   width: number;
-  lines: number;
-  colorFormat: string;
+  /** Duration of the encoded audio. */
   expectedDuration: string;
+  /** File size of the WAV output. */
   fileSize: string;
+  /** JPEG payload size. */
+  jpegSize: string;
 }
 
 export interface DecodeState {

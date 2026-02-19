@@ -132,8 +132,12 @@ export default function App() {
           <p className="text-sm text-white/50 tracking-widest uppercase font-medium">
             Digital SSTV Decoder - Work in Progress
           </p>
-          <p className="text-amber-400/70 text-xs mt-2">⚠️ Non-functional - Development in progress</p>
-          <p className="text-white/30 text-xs mt-1">v{__APP_VERSION__} · {__BUILD_DATE__}</p>
+          <p className="text-amber-400/70 text-xs mt-2">
+            ⚠️ Best-effort DRM implementation — real EasyPal recordings may not decode
+          </p>
+          <p className="text-white/30 text-xs mt-1">
+            v{__APP_VERSION__} · {__BUILD_DATE__}
+          </p>
         </header>
 
         <main className="glass rounded-2xl p-8 mb-6 grid grid-cols-1 lg:grid-cols-2 gap-0">
@@ -204,17 +208,15 @@ export default function App() {
                     <div className="p-3 diag-grid text-xs">
                       <span className="text-white/35">Mode</span>
                       <span className="font-mono text-white/70">{encodeResult.mode}</span>
-                      <span className="text-white/35">Resolution</span>
-                      <span className="font-mono text-white/70">
-                        {encodeResult.width}×{encodeResult.lines}
-                      </span>
-                      <span className="text-white/35">Color</span>
-                      <span className="font-mono text-white/70">{encodeResult.colorFormat}</span>
+                      <span className="text-white/35">Image width</span>
+                      <span className="font-mono text-white/70">{encodeResult.width}px</span>
+                      <span className="text-white/35">JPEG payload</span>
+                      <span className="font-mono text-white/70">{encodeResult.jpegSize}</span>
                       <span className="text-white/35">Duration</span>
                       <span className="font-mono text-white/70">
                         {encodeResult.expectedDuration}
                       </span>
-                      <span className="text-white/35">File size</span>
+                      <span className="text-white/35">WAV size</span>
                       <span className="font-mono text-white/70">{encodeResult.fileSize}</span>
                     </div>
                   </div>

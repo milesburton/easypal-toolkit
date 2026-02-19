@@ -10,12 +10,15 @@ export function DiagnosticsPanel({ diagnostics }: Props) {
   const [open, setOpen] = useState(true);
   const {
     mode,
-    visCode,
     sampleRate,
     fileDuration,
     freqOffset,
-    autoCalibrate,
-    visEndPos,
+    transmissionMode,
+    spectrumOccupancy,
+    fecRate,
+    snrDb,
+    framesDecoded,
+    segmentErrors,
     decodeTimeMs,
     quality,
   } = diagnostics;
@@ -35,12 +38,16 @@ export function DiagnosticsPanel({ diagnostics }: Props) {
             <span className="text-white/35 font-medium">Mode</span>
             <span className="font-mono text-white/65 break-all">{mode ?? '—'}</span>
 
-            <span className="text-white/35 font-medium">VIS code</span>
+            <span className="text-white/35 font-medium">Transmission mode</span>
             <span className="font-mono text-white/65">
-              {visCode != null
-                ? `0x${visCode.toString(16).toUpperCase().padStart(2, '0')} (${visCode})`
-                : '—'}
+              {transmissionMode != null ? `Mode ${transmissionMode}` : '—'}
             </span>
+
+            <span className="text-white/35 font-medium">Spectrum occupancy</span>
+            <span className="font-mono text-white/65">{spectrumOccupancy ?? '—'}</span>
+
+            <span className="text-white/35 font-medium">FEC rate</span>
+            <span className="font-mono text-white/65">{fecRate ?? '—'}</span>
 
             <span className="text-white/35 font-medium">Sample rate</span>
             <span className="font-mono text-white/65">{sampleRate ? `${sampleRate} Hz` : '—'}</span>
@@ -50,17 +57,26 @@ export function DiagnosticsPanel({ diagnostics }: Props) {
 
             <span className="text-white/35 font-medium">Freq offset</span>
             <span
-              className={`font-mono ${Math.abs(freqOffset) > 50 ? 'text-amber-400 font-semibold' : 'text-white/65'}`}
+              className={`font-mono ${Math.abs(freqOffset ?? 0) > 50 ? 'text-amber-400 font-semibold' : 'text-white/65'}`}
             >
               {freqOffset != null ? `${freqOffset > 0 ? '+' : ''}${freqOffset} Hz` : '—'}
             </span>
 
-            <span className="text-white/35 font-medium">Auto-calibrate</span>
-            <span className="font-mono text-white/65">{autoCalibrate ? 'on' : 'off'}</span>
+            <span className="text-white/35 font-medium">SNR (est.)</span>
+            <span
+              className={`font-mono ${snrDb != null && snrDb < 10 ? 'text-amber-400 font-semibold' : 'text-white/65'}`}
+            >
+              {snrDb != null ? `${snrDb} dB` : '—'}
+            </span>
 
-            <span className="text-white/35 font-medium">VIS end pos</span>
-            <span className="font-mono text-white/65">
-              {visEndPos != null ? `${visEndPos} samples` : '—'}
+            <span className="text-white/35 font-medium">Frames decoded</span>
+            <span className="font-mono text-white/65">{framesDecoded ?? '—'}</span>
+
+            <span className="text-white/35 font-medium">Segment errors</span>
+            <span
+              className={`font-mono ${(segmentErrors ?? 0) > 0 ? 'text-amber-400 font-semibold' : 'text-white/65'}`}
+            >
+              {segmentErrors ?? '—'}
             </span>
 
             <span className="text-white/35 font-medium">Decode time</span>

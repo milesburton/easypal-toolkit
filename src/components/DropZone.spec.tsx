@@ -45,7 +45,7 @@ describe('DropZone', () => {
   it('calls onFile when a file is selected', async () => {
     const user = userEvent.setup();
     const onFile = vi.fn();
-    
+
     render(
       <DropZone
         accept="audio/*"
@@ -83,7 +83,7 @@ describe('DropZone', () => {
 
   it('handles drag and drop', async () => {
     const onFile = vi.fn();
-    
+
     render(
       <DropZone
         accept="audio/*"

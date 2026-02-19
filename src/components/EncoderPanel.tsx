@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { EncodeResult } from '../types.js';
-import { EASYPAL_MODES, EasyPalEncoder } from '../utils/EasyPalEncoder.js';
+import { DRMEncoder } from '../utils/drmEncoder.js';
 import { DropZone } from './DropZone.js';
 
 interface Props {
@@ -26,7 +26,6 @@ const ImageIcon = () => (
 );
 
 export function EncoderPanel({ onResult, onError, onReset }: Props) {
-  const [selectedMode, setSelectedMode] = useState('ROBOT36');
   const [processing, setProcessing] = useState(false);
 
   const handleFile = async (file: File) => {
@@ -37,19 +36,40 @@ export function EncoderPanel({ onResult, onError, onReset }: Props) {
     setProcessing(true);
     onReset();
     try {
-      const encoder = new EasyPalEncoder(selectedMode);
+      const encoder = new DRMEncoder();
       const blob = await encoder.encodeImage(file);
-      const mode = EASYPAL_MODES[selectedMode];
-      if (!mode) throw new Error(`Unknown EasyPal mode: ${selectedMode}`);
+
+      // Get image dimensions and JPEG size for display
+      const bitmap = await createImageBitmap(file);
+      const { width, height } = bitmap;
+      bitmap.close();
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      const jpegSize = await new Promise<number>((resolve) => {
+        if (!ctx) {
+          resolve(0);
+          return;
+        }
+        createImageBitmap(file).then((bmp) => {
+          ctx.drawImage(bmp, 0, 0);
+          bmp.close();
+          canvas.toBlob((b) => resolve(b?.size ?? 0), 'image/jpeg', 0.8);
+        });
+      });
+
+      const durationS = blob.size / (12000 * 2); // rough: 12 kHz 16-bit mono
+
       onResult({
         url: URL.createObjectURL(blob),
-        filename: `easypal_${selectedMode.toLowerCase()}_${Date.now()}.wav`,
-        mode: mode.name,
-        width: mode.width,
-        lines: mode.lines,
-        colorFormat: mode.colorFormat,
-        expectedDuration: `${(mode.lines * (mode.syncPulse + mode.syncPorch + (mode.scanTime || 0))).toFixed(1)}s`,
+        filename: `drm_encoded_${Date.now()}.wav`,
+        mode: 'DRM Mode B · SO_0 · 16-QAM',
+        width,
+        expectedDuration: `${durationS.toFixed(1)}s`,
         fileSize: `${(blob.size / 1024).toFixed(0)} KB`,
+        jpegSize: `${(jpegSize / 1024).toFixed(0)} KB`,
       });
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Encoding failed');
@@ -62,29 +82,16 @@ export function EncoderPanel({ onResult, onError, onReset }: Props) {
     <div className="bg-transparent">
       <div className="text-center mb-6 pb-5 border-b border-white/10">
         <h2 className="text-white text-xl font-semibold tracking-wide">Encoder</h2>
-        <p className="text-amber-400/60 text-xs mt-1">⚠️ Placeholder - Not implemented</p>
+        <p className="text-white/40 text-xs mt-1">DRM Mode B · OFDM · 16-QAM</p>
+        <p className="text-amber-400/60 text-xs mt-1">
+          ⚠️ Best-effort — uses JPEG (not JPEG2000); may not be receivable by EasyPal
+        </p>
       </div>
 
-      <div className="mb-5 h-9 flex items-center justify-center gap-3 text-sm">
-        <label
-          className="text-white/50 text-xs uppercase tracking-wider font-medium"
-          htmlFor="mode-select"
-        >
-          Mode
-        </label>
-        <select
-          id="mode-select"
-          value={selectedMode}
-          onChange={(e) => setSelectedMode(e.target.value)}
-          className="px-3 py-1.5 text-sm bg-white/[0.06] border border-white/15 text-white/80 rounded-lg cursor-pointer focus:outline-none focus:border-primary transition-colors"
-          disabled
-        >
-          {Object.entries(EASYPAL_MODES).map(([key, mode]) => (
-            <option key={key} value={key}>
-              {mode.name} ({mode.width}×{mode.lines})
-            </option>
-          ))}
-        </select>
+      <div className="mb-5 h-9 flex items-center justify-center">
+        <p className="text-white/50 text-xs uppercase tracking-wider font-medium">
+          Drop an image to encode as DRM audio
+        </p>
       </div>
 
       <DropZone

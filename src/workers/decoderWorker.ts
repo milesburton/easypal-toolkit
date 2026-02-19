@@ -1,11 +1,11 @@
 import type { WorkerDecodeRequest, WorkerOutboundMessage } from '../types.js';
-import { EasyPalDecoder } from '../utils/EasyPalDecoder.js';
+import { DRMDecoder } from '../utils/drmDecoder.js';
 
 self.onmessage = (event: MessageEvent<WorkerDecodeRequest>) => {
   const { samples, sampleRate } = event.data;
 
   try {
-    const decoder = new EasyPalDecoder(sampleRate);
+    const decoder = new DRMDecoder(sampleRate);
     const result = decoder.decodeSamples(samples);
 
     const msg: WorkerOutboundMessage = {
