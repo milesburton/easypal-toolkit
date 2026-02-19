@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "name": "ISS PD120",
+    "audioFile": "examples/iss-test.wav",
+    "imageFile": "gallery/iss-test-wav.png",
+    "mode": "PD 120",
+    "quality": "good"
+  },
+  {
+    "name": "Space Comms PD120",
+    "audioFile": "examples/Space_Comms_PD120_SSTV_Test_Recording.mp3",
+    "imageFile": "gallery/space-comms-pd120-sstv-test-recording-mp3.png",
+    "mode": "PD 120",
+    "quality": "good"
+  },
+  {
+    "name": "Colour bars",
+    "audioFile": "examples/test-colorbars.wav",
+    "imageFile": "gallery/test-colorbars-wav.png",
+    "mode": "Robot 36",
+    "quality": "good"
+  }
+]

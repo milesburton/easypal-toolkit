@@ -138,7 +138,7 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
 
       <div className="mb-5 h-9 flex items-center justify-center gap-3 text-sm">
         <p className="text-white/50 text-xs uppercase tracking-wider font-medium">
-          Drop an EasyPal audio recording to decode
+          Automatic mode detection via VIS code
         </p>
       </div>
 
