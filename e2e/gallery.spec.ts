@@ -34,7 +34,7 @@ test.describe('Gallery', () => {
     await page.locator('text=Example Transmissions').waitFor({ timeout: 10000 });
 
     const gallerySection = page.locator('section').filter({ hasText: 'Example Transmissions' });
-    const badges = gallerySection.locator('span').filter({ hasText: /Robot 36|PD 120/ });
+    const badges = gallerySection.locator('span').filter({ hasText: /DRM Mode B/ });
     await expect(badges.first()).toBeVisible();
   });
 
@@ -49,7 +49,7 @@ test.describe('Gallery', () => {
     await expect(
       page
         .locator('text=Decoded successfully')
-        .or(page.locator('text=Decoded (quality issues)'))
+        .or(page.locator('text=Decode failed — no image recovered'))
         .or(page.locator('text=Processing…'))
     ).toBeVisible({ timeout: 120000 });
   });
