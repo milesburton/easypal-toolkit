@@ -62,6 +62,7 @@ export function EncoderPanel({ onResult, onError, onReset }: Props) {
     <div className="bg-transparent">
       <div className="text-center mb-6 pb-5 border-b border-white/10">
         <h2 className="text-white text-xl font-semibold tracking-wide">Encoder</h2>
+        <p className="text-amber-400/60 text-xs mt-1">⚠️ Placeholder - Not implemented</p>
       </div>
 
       <div className="mb-5 h-9 flex items-center justify-center gap-3 text-sm">
@@ -69,13 +70,14 @@ export function EncoderPanel({ onResult, onError, onReset }: Props) {
           className="text-white/50 text-xs uppercase tracking-wider font-medium"
           htmlFor="mode-select"
         >
-          EasyPal Mode
+          Mode
         </label>
         <select
           id="mode-select"
           value={selectedMode}
           onChange={(e) => setSelectedMode(e.target.value)}
           className="px-3 py-1.5 text-sm bg-white/[0.06] border border-white/15 text-white/80 rounded-lg cursor-pointer focus:outline-none focus:border-primary transition-colors"
+          disabled
         >
           {Object.entries(EASYPAL_MODES).map(([key, mode]) => (
             <option key={key} value={key}>

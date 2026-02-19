@@ -1,39 +1,48 @@
 # EasyPal Toolkit
 
-Web-based EasyPal (Digital SSTV) encoder/decoder. Converts images to EasyPal audio and decodes EasyPal transmissions in-browser.
+⚠️ **WORK IN PROGRESS** - Digital SSTV decoder implementation underway
 
-**Live App:** https://milesburton.github.io/easypal-toolkit/
+Web-based EasyPal (Digital SSTV) encoder/decoder. This project aims to provide browser-based tools for encoding images to Digital SSTV audio and decoding Digital SSTV transmissions.
 
-## Features
+**Live App:** https://milesburton.github.io/easypal-toolkit/ _(currently non-functional)_
 
-- Encode images to EasyPal audio (WAV)
-- Decode EasyPal audio to images (PNG)
-- Supports Robot 36, Martin M1, Scottie S1, PD120
-- Automatic VIS code detection with timing-based fallback for non-standard headers (ISS)
-- Frequency offset auto-calibration for Doppler-shifted signals
-- Client-side only — no server required
+## Current Status
 
-## Usage
+🚧 **In Development** - Digital SSTV protocol implementation in progress
 
-### Encode
-1. Select EasyPal mode
-2. Upload image
-3. Download WAV file
+### Planned Features
 
-### Decode
-1. Upload EasyPal audio (WAV/MP3/OGG)
-2. Mode auto-detected from VIS code
-3. Download decoded PNG
+- [ ] Decode Digital SSTV/EasyPal audio to images (PNG)
+- [ ] Encode images to Digital SSTV/EasyPal audio (WAV)
+- [ ] PSK modulation support
+- [ ] Reed-Solomon error correction
+- [ ] JPEG compression
+- [ ] Client-side only — no server required
 
-## EasyPal Modes
+## Planned Usage
 
-| Mode | Resolution | Scan time | Colour |
-|------|-----------|-----------|--------|
-| Robot 36 | 320×240 | 36s | YUV |
-| Martin M1 | 320×256 | 114s | RGB |
-| Scottie S1 | 320×256 | 110s | RGB |
-| PD120 | 640×496 | 122s | YUV |
+### Decode (In Development)
+1. Upload Digital SSTV/EasyPal audio file (WAV/MP3/OGG)
+2. Automatic protocol detection and decoding
+3. Download decoded image (PNG)
+
+### Encode (Planned)
+1. Upload source image
+2. Configure transmission parameters
+3. Download Digital SSTV audio file (WAV)
+
+## Technical Details
+
+Digital SSTV (also known as EasyPal or HAMDRM) uses:
+- **PSK31-like digital modulation** (not FM like analog SSTV)
+- **JPEG compression** for efficient image encoding
+- **Reed-Solomon error correction** for reliability
+- **OFDM** for robust transmission
+
+## Contributing
+
+This is an actively developing project. Contributions welcome!
 
 ## License
 
-MIT
+TBD - Considering GPL v3 due to potential use of QSSTV reference implementation

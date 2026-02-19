@@ -130,9 +130,10 @@ export default function App() {
             EasyPal Toolkit
           </h1>
           <p className="text-sm text-white/50 tracking-widest uppercase font-medium">
-            In-browser EasyPal digital SSTV encoder and decoder
+            Digital SSTV Decoder - Work in Progress
           </p>
-          <p className="text-white/30 text-xs mt-2">v{__APP_VERSION__} · {__BUILD_DATE__}</p>
+          <p className="text-amber-400/70 text-xs mt-2">⚠️ Non-functional - Development in progress</p>
+          <p className="text-white/30 text-xs mt-1">v{__APP_VERSION__} · {__BUILD_DATE__}</p>
         </header>
 
         <main className="glass rounded-2xl p-8 mb-6 grid grid-cols-1 lg:grid-cols-2 gap-0">
