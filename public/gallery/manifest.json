@@ -1,16 +1,1 @@
-[
-  {
-    "name": "Digital SSTV Sample 1",
-    "audioFile": "examples/DSSTV1.wav",
-    "imageFile": "gallery/iss-test-wav.png",
-    "mode": "Robot 36",
-    "quality": "good"
-  },
-  {
-    "name": "Digital SSTV Sample 2",
-    "audioFile": "examples/DSSTV2.wav",
-    "imageFile": "gallery/space-comms-pd120-sstv-test-recording-mp3.png",
-    "mode": "PD 120",
-    "quality": "good"
-  }
-]
+[]
