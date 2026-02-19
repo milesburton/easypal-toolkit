@@ -2,68 +2,106 @@
  * DRM time and frequency interleaving/deinterleaving.
  *
  * DRM uses two levels of interleaving on the MSC:
- *   1. Frequency interleaving: shuffles cells within each OFDM symbol.
+ *   1. Frequency interleaving: shuffles cells within each OFDM symbol group.
  *   2. Time interleaving: spreads cells across multiple frames (short = 1 frame).
  *
- * The interleaving patterns here are simplified approximations of the DRM
- * standard tables, which are sufficient for an ideal (noise-free) channel
- * and for self-decoding of our own encoded frames.
+ * The frequency interleaver operates on the flat MSC cell array, which is
+ * laid out symbol-major.  Each symbol group is permuted independently using
+ * a bijective bit-reversal mapping sized to that group.
+ *
+ * Mode B SO_0 MSC slot layout (29 carriers, 15 symbols):
+ *   - sym 0: 29 − 5 time_pilots − 2 FAC − 6 SDC = 16 MSC slots
+ *   - sym 1–14: 29 − 5 time_pilots = 24 MSC slots each
+ *   Total: 16 + 14×24 = 352 MSC slots per frame.
  *
  * Reference: ETSI ES 201 980 §8.4, QSSTV src/drmtx/common/interleaver/.
  */
 
-import { NUM_CARRIERS } from './drmConstants.js';
-
-// ── Frequency interleaver ─────────────────────────────────────────────────────
+// ── Bijective frequency permutation builder ───────────────────────────────────
 
 /**
- * Generate the frequency interleaving permutation for Mode B, SO_0.
- * Uses a simple bit-reversal permutation of the carrier indices within
- * the active band.  This is a practical approximation; the exact DRM
- * permutation is defined by a specific PRBS generator (spec §8.4.2).
+ * Build a bijective (one-to-one, onto) bit-reversal permutation of length n.
+ *
+ * Standard bit-reversal over 2^ceil(log2(n)) is not bijective for non-powers
+ * of two because multiple indices may map to the same reversed value.  This
+ * implementation enumerates the 2^k bit-reversal values in order and keeps
+ * only the first occurrence of each value < n, yielding a bijection.
  */
-function buildFreqPermutation(len: number): Uint8Array {
-  // Bit-reversal permutation for the active carrier window
-  const bits = Math.ceil(Math.log2(len));
-  const perm = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
+function buildBijectiveFreqPermutation(n: number): number[] {
+  const bits = Math.ceil(Math.log2(Math.max(n, 2)));
+  const perm: number[] = [];
+  const used = new Array<boolean>(n).fill(false);
+  for (let i = 0; perm.length < n; i++) {
     let rev = 0;
     let x = i;
     for (let b = 0; b < bits; b++) {
       rev = (rev << 1) | (x & 1);
       x >>= 1;
     }
-    perm[i] = rev % len;
+    if (rev < n && !used[rev]) {
+      perm.push(rev);
+      used[rev] = true;
+    }
   }
   return perm;
 }
 
-const FREQ_PERM = buildFreqPermutation(NUM_CARRIERS);
-const FREQ_PERM_INV = (() => {
-  const inv = new Uint8Array(NUM_CARRIERS);
-  for (let i = 0; i < NUM_CARRIERS; i++) inv[FREQ_PERM[i]] = i;
+function buildInverse(perm: number[]): number[] {
+  const inv = new Array<number>(perm.length);
+  for (let i = 0; i < perm.length; i++) inv[perm[i]] = i;
   return inv;
-})();
+}
+
+// Precomputed bijective permutations for the two group sizes.
+const FREQ_PERM_16 = buildBijectiveFreqPermutation(16);
+const FREQ_PERM_24 = buildBijectiveFreqPermutation(24);
+const FREQ_PERM_16_INV = buildInverse(FREQ_PERM_16);
+const FREQ_PERM_24_INV = buildInverse(FREQ_PERM_24);
 
 /**
- * Frequency-interleave a single OFDM symbol's payload cells in-place.
- * @param cells  Array of [re, im] pairs, length = NUM_CARRIERS.
+ * Sizes of each symbol's MSC slot group, in symbol order.
+ * sym 0 = 16 slots, sym 1–14 = 24 slots each.
+ */
+const FREQ_GROUP_SIZES = [16, ...new Array<number>(14).fill(24)] as const;
+
+// ── Frequency interleaver ─────────────────────────────────────────────────────
+
+/**
+ * Frequency-interleave the flat MSC cell array.
+ *
+ * @param cells  Flat array of [re, im] pairs in symbol-major order (352 elements for Mode B SO_0).
+ * @returns New array with cells permuted per symbol group.
  */
 export function freqInterleave(cells: Array<[number, number]>): Array<[number, number]> {
-  const out: Array<[number, number]> = Array.from({ length: cells.length }, () => [0, 0]);
-  for (let i = 0; i < cells.length; i++) {
-    out[FREQ_PERM[i]] = cells[i];
+  const out: Array<[number, number]> = cells.map((c) => [c[0], c[1]]);
+  let offset = 0;
+  for (let sym = 0; sym < FREQ_GROUP_SIZES.length; sym++) {
+    const groupSize = FREQ_GROUP_SIZES[sym];
+    const perm = sym === 0 ? FREQ_PERM_16 : FREQ_PERM_24;
+    const group = cells.slice(offset, offset + groupSize);
+    for (let i = 0; i < groupSize; i++) {
+      out[offset + perm[i]] = group[i];
+    }
+    offset += groupSize;
   }
   return out;
 }
 
 /**
- * Frequency-deinterleave a single OFDM symbol's payload cells.
+ * Frequency-deinterleave the flat MSC cell array.
+ * Exact inverse of freqInterleave.
  */
 export function freqDeinterleave(cells: Array<[number, number]>): Array<[number, number]> {
-  const out: Array<[number, number]> = Array.from({ length: cells.length }, () => [0, 0]);
-  for (let i = 0; i < cells.length; i++) {
-    out[FREQ_PERM_INV[i]] = cells[i];
+  const out: Array<[number, number]> = cells.map((c) => [c[0], c[1]]);
+  let offset = 0;
+  for (let sym = 0; sym < FREQ_GROUP_SIZES.length; sym++) {
+    const groupSize = FREQ_GROUP_SIZES[sym];
+    const inv = sym === 0 ? FREQ_PERM_16_INV : FREQ_PERM_24_INV;
+    const group = cells.slice(offset, offset + groupSize);
+    for (let i = 0; i < groupSize; i++) {
+      out[offset + inv[i]] = group[i];
+    }
+    offset += groupSize;
   }
   return out;
 }

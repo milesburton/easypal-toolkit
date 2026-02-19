@@ -205,20 +205,26 @@ export class DRMEncoder {
           dataCells.push({ symbolIdx: sym, carrierIdx: ki, re, im });
         }
 
-        // FAC cells (4-QAM, 2 cells × 2 bits/cell = 4 bits per frame from FAC)
+        // FAC cells (4-QAM, 2 cells × 2 bits/cell = 4 FAC bits per frame).
+        // Cycle through the full 72-bit FAC word across frames.
+        const facBitsPerFrame = FAC_CELLS.length * 2;
+        const facBitOffset = (frameNo * facBitsPerFrame) % facBits.length;
         for (let fi = 0; fi < FAC_CELLS.length; fi++) {
           const [sym, k] = FAC_CELLS[fi];
           const ki = k - K_MIN;
-          const bits2 = facBits.slice(fi * 2, fi * 2 + 2);
+          const bits2 = facBits.slice(facBitOffset + fi * 2, facBitOffset + fi * 2 + 2);
           const [re, im] = map4QAM(bits2.length === 2 ? bits2 : [0, 0]);
           dataCells.push({ symbolIdx: sym, carrierIdx: ki, re, im });
         }
 
-        // SDC cells (4-QAM)
+        // SDC cells (4-QAM, 6 cells × 2 bits/cell = 12 SDC bits per frame).
+        // Spread the full SDC message across frames so the decoder can recover it.
+        const sdcBitsPerFrame = SDC_CELLS.length * 2;
+        const sdcBitOffset = (frameNo * sdcBitsPerFrame) % sdcBits.length;
         for (let si = 0; si < SDC_CELLS.length; si++) {
           const [sym, k] = SDC_CELLS[si];
           const ki = k - K_MIN;
-          const bits2 = sdcBits.slice(si * 2, si * 2 + 2);
+          const bits2 = sdcBits.slice(sdcBitOffset + si * 2, sdcBitOffset + si * 2 + 2);
           const [re, im] = map4QAM(bits2.length === 2 ? bits2 : [0, 0]);
           dataCells.push({ symbolIdx: sym, carrierIdx: ki, re, im });
         }
