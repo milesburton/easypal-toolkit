@@ -237,7 +237,9 @@ export default function App() {
                 <>
                   <h3 className="mb-4 text-sm font-semibold text-center uppercase tracking-wider">
                     <span className={verdict === 'bad' ? 'text-red-400' : 'text-emerald-400'}>
-                      {verdict === 'bad' ? 'Decoded (quality issues)' : 'Decoded successfully'}
+                      {verdict === 'bad'
+                        ? 'Decode failed — no image recovered'
+                        : 'Decoded successfully'}
                     </span>
                     <QualityBadge verdict={verdict} />
                   </h3>

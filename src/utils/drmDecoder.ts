@@ -224,7 +224,16 @@ export class DRMDecoder {
     // so the main thread can async-decode them into real pixels via createImageBitmap.
     const { pixels, width, height } = decodeSyncFallback(reassembled);
 
-    const quality = analyzeImageQuality(pixels, width, height);
+    const quality = reassembled
+      ? analyzeImageQuality(pixels, width, height)
+      : {
+          rAvg: 0,
+          gAvg: 0,
+          bAvg: 0,
+          brightness: 0,
+          verdict: 'bad' as const,
+          warnings: ['No JPEG data recovered — decode failed'],
+        };
     const decodeTimeMs = Date.now() - startMs;
 
     const diagnostics: DecodeDiagnostics = {

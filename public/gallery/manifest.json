@@ -3,14 +3,14 @@
     "name": "Digital SSTV Sample 1",
     "audioFile": "examples/DSSTV1.wav",
     "imageFile": "gallery/dsstv1.png",
-    "mode": "Robot 36",
+    "mode": "DRM Mode B",
     "quality": "good"
   },
   {
     "name": "Digital SSTV Sample 2",
     "audioFile": "examples/DSSTV2.wav",
     "imageFile": "gallery/dsstv2.png",
-    "mode": "PD 120",
+    "mode": "DRM Mode B",
     "quality": "good"
   }
 ]
