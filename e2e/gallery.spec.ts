@@ -38,7 +38,7 @@ test.describe('Gallery', () => {
     await expect(badges.first()).toBeVisible();
   });
 
-  test('"Try decoding" scrolls to decoder and starts decoding', async ({ page }) => {
+  test('"Try decoding" decodes the sample and shows success', async ({ page }) => {
     test.setTimeout(180000);
     await page.locator('text=Example Transmissions').waitFor({ timeout: 10000 });
 
@@ -46,12 +46,8 @@ test.describe('Gallery', () => {
     await expect(tryButtons.first()).toBeVisible();
     await tryButtons.first().click();
 
-    await expect(
-      page
-        .locator('text=Decoded successfully')
-        .or(page.locator('text=Decode failed — no image recovered'))
-        .or(page.locator('text=Processing…'))
-    ).toBeVisible({ timeout: 120000 });
+    // Gallery WAVs are DRM-encoded by our encoder; they must decode successfully.
+    await expect(page.locator('text=Decoded successfully')).toBeVisible({ timeout: 120000 });
   });
 
   test('gallery images load without broken src', async ({ page }) => {
