@@ -134,6 +134,8 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
     <div ref={panelRef} className="bg-transparent">
       <div className="text-center mb-6 pb-5 border-b border-white/10">
         <h2 className="text-white text-xl font-semibold tracking-wide">Decoder</h2>
+        <p className="text-white/40 text-xs mt-1">Digital SSTV/EasyPal (PSK Modulation)</p>
+        <p className="text-amber-400/60 text-xs mt-1">⚠️ Placeholder - Not implemented</p>
       </div>
 
       <div className="mb-5 h-9 flex items-center justify-center gap-3 text-sm">
