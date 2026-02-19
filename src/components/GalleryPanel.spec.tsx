@@ -6,17 +6,17 @@ import { GalleryPanel } from './GalleryPanel.js';
 
 const ENTRIES: GalleryEntry[] = [
   {
-    name: 'ISS Robot 36',
-    audioFile: 'examples/iss-test.wav',
-    imageFile: 'gallery/iss-test.png',
-    mode: 'Robot 36',
+    name: 'EasyPal Sample 1',
+    audioFile: 'examples/sample1.wav',
+    imageFile: 'gallery/sample1.png',
+    mode: 'EasyPal',
     quality: 'good',
   },
   {
-    name: 'Colour bars',
-    audioFile: 'examples/test-colorbars.wav',
-    imageFile: 'gallery/test-colorbars.png',
-    mode: 'Robot 36',
+    name: 'EasyPal Sample 2',
+    audioFile: 'examples/sample2.wav',
+    imageFile: 'gallery/sample2.png',
+    mode: 'EasyPal',
     quality: 'good',
   },
 ];
@@ -52,8 +52,8 @@ describe('GalleryPanel', () => {
     render(<GalleryPanel />);
 
     await waitFor(() => {
-      expect(screen.getByText('ISS Robot 36')).toBeInTheDocument();
-      expect(screen.getByText('Colour bars')).toBeInTheDocument();
+      expect(screen.getByText('EasyPal Sample 1')).toBeInTheDocument();
+      expect(screen.getByText('EasyPal Sample 2')).toBeInTheDocument();
     });
   });
 
@@ -67,7 +67,7 @@ describe('GalleryPanel', () => {
     await waitFor(() => {
       const downloadLinks = screen.getAllByRole('link', { name: /download/i });
       expect(downloadLinks).toHaveLength(2);
-      expect(downloadLinks[0]).toHaveAttribute('href', 'examples/iss-test.wav');
+      expect(downloadLinks[0]).toHaveAttribute('href', 'examples/sample1.wav');
       expect(downloadLinks[0]).toHaveAttribute('download');
     });
   });
@@ -81,8 +81,8 @@ describe('GalleryPanel', () => {
 
     await waitFor(() => {
       const images = screen.getAllByRole('img');
-      expect(images[0]).toHaveAttribute('src', 'gallery/iss-test.png');
-      expect(images[1]).toHaveAttribute('src', 'gallery/test-colorbars.png');
+      expect(images[0]).toHaveAttribute('src', 'gallery/sample1.png');
+      expect(images[1]).toHaveAttribute('src', 'gallery/sample2.png');
     });
   });
 
@@ -98,7 +98,7 @@ describe('GalleryPanel', () => {
 
     await userEvent.click(screen.getAllByRole('button', { name: /try decoding/i })[0]);
 
-    expect(onTryDecode).toHaveBeenCalledWith('examples/iss-test.wav');
+    expect(onTryDecode).toHaveBeenCalledWith('examples/sample1.wav');
   });
 
   it('shows mode badge on each card', async () => {
@@ -109,7 +109,7 @@ describe('GalleryPanel', () => {
     render(<GalleryPanel />);
 
     await waitFor(() => {
-      const badges = screen.getAllByText('Robot 36');
+      const badges = screen.getAllByText('EasyPal');
       expect(badges.length).toBeGreaterThanOrEqual(2);
     });
   });

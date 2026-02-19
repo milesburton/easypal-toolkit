@@ -86,7 +86,7 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
           const imageUrl = pixelsToDataUrl(msg.pixels, msg.width, msg.height);
           onResult({
             url: imageUrl,
-            filename: `sstv_decoded_${Date.now()}.png`,
+            filename: `easypal_decoded_${Date.now()}.png`,
             diagnostics: msg.diagnostics,
           });
         }
@@ -138,7 +138,7 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
 
       <div className="mb-5 h-9 flex items-center justify-center gap-3 text-sm">
         <p className="text-white/50 text-xs uppercase tracking-wider font-medium">
-          Automatic mode detection via VIS code
+          Drop an EasyPal audio recording to decode
         </p>
       </div>
 
