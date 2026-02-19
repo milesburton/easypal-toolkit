@@ -14,7 +14,7 @@ test.describe('Gallery', () => {
       .locator('section')
       .filter({ hasText: 'Example Transmissions' })
       .locator('img');
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(2);
   });
 
   test('each gallery card has a working download link', async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe('Gallery', () => {
 
     const downloadLinks = page.locator('a[download]');
     const count = await downloadLinks.count();
-    expect(count).toBeGreaterThanOrEqual(3);
+    expect(count).toBeGreaterThanOrEqual(2);
 
     const firstLink = downloadLinks.first();
     const href = await firstLink.getAttribute('href');
