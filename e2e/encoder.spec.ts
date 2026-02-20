@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { createCanvas } from 'canvas';
 
-/** Create a minimal JPEG test file on disk for upload. */
 function makeTempJpeg(): string {
   const canvas = createCanvas(64, 64);
   const ctx = canvas.getContext('2d');
@@ -21,17 +20,15 @@ function makeTempJpeg(): string {
 test.describe('Encoder', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText('EasyPal Toolkit');
+    await expect(page.locator('h1')).toContainText('DRM Studio');
   });
 
   test('encoder panel is visible with a file input', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Encoder' })).toBeVisible();
 
-    // The first file input belongs to the encoder
     const fileInput = page.locator('input[type="file"]').first();
     await expect(fileInput).toBeAttached();
 
-    // And its "Choose File" button is visible
     const chooseBtn = page.getByRole('button', { name: /Choose File/i }).first();
     await expect(chooseBtn).toBeVisible();
   });
@@ -44,20 +41,17 @@ test.describe('Encoder', () => {
     const fileInput = page.locator('input[type="file"]').first();
     await fileInput.setInputFiles(jpegPath);
 
-    // After encoding, the result panel shows this message and a Download WAV button.
     await expect(page.locator('text=Encoded successfully')).toBeVisible({ timeout: 90000 });
     await expect(page.getByRole('button', { name: 'Download WAV' })).toBeVisible();
   });
 
   test('encoder rejects a non-image file with an error', async ({ page }) => {
-    // Write a fake text file
     const txtPath = join(tmpdir(), `easypal-test-${Date.now()}.txt`);
     writeFileSync(txtPath, 'not an image');
 
     const fileInput = page.locator('input[type="file"]').first();
     await fileInput.setInputFiles(txtPath);
 
-    // Should show an error message
     await expect(page.locator('text=Please select an image file')).toBeVisible({ timeout: 5000 });
   });
 });

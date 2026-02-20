@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('renders the EasyPal Toolkit heading', async ({ page }) => {
+test('renders the DRM Studio heading', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /EasyPal Toolkit/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /DRM Studio/i })).toBeVisible();
 });
 
 test('renders encoder and decoder drop zones', async ({ page }) => {

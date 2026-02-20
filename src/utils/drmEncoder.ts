@@ -4,11 +4,6 @@
  * Pipeline:
  *   Image file → JPEG (Canvas API) → MSC segments → convolutional encode
  *   → interleave → 16-QAM map → cell-map → OFDM modulate → WAV blob
- *
- * Note: Real EasyPal uses JPEG2000; this implementation uses standard JPEG
- * (via the Canvas toBlob API) because there is no pure-JS JPEG2000 encoder.
- * Encoded audio is a valid DRM Mode B signal and may be decodable by Dream
- * or QSSTV with JPEG fallback.  It is not bit-for-bit EasyPal compatible.
  */
 
 import {

@@ -8,17 +8,15 @@ const DSSTV1_WAV = resolve(__dirname, '../public/examples/DSSTV1.wav');
 test.describe('Decoder', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText('EasyPal Toolkit');
+    await expect(page.locator('h1')).toContainText('DRM Studio');
   });
 
   test('decoder panel is visible with a file input', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Decoder' })).toBeVisible();
 
-    // The second file input belongs to the decoder
     const fileInput = page.locator('input[type="file"]').nth(1);
     await expect(fileInput).toBeAttached();
 
-    // Its "Choose File" button is visible
     const chooseBtn = page.getByRole('button', { name: /Choose File/i }).nth(1);
     await expect(chooseBtn).toBeVisible();
   });
@@ -26,11 +24,9 @@ test.describe('Decoder', () => {
   test('decoder decodes a DRM-encoded WAV and shows "Decoded successfully"', async ({ page }) => {
     test.setTimeout(180000);
 
-    // Upload our known-good DRM WAV file
     const fileInput = page.locator('input[type="file"]').nth(1);
     await fileInput.setInputFiles(DSSTV1_WAV);
 
-    // Must show success — not just "any terminal state"
     await expect(page.locator('text=Decoded successfully')).toBeVisible({ timeout: 120000 });
   });
 
@@ -42,19 +38,15 @@ test.describe('Decoder', () => {
 
     await expect(page.locator('text=Decoded successfully')).toBeVisible({ timeout: 120000 });
 
-    // Diagnostics panel shows DRM mode — match the font-mono value span
     await expect(page.getByText(/DRM Mode B/i).first()).toBeVisible();
-    // Sample rate row is present (browser AudioContext may resample, so just check for Hz unit)
     await expect(page.getByText(/\d+ Hz/).first()).toBeVisible();
   });
 
   test('decoder rejects a non-audio file with an error', async ({ page }) => {
-    // Try uploading a gallery image (PNG) into the decoder
     const pngPath = resolve(__dirname, '../public/gallery/dsstv1.png');
     const fileInput = page.locator('input[type="file"]').nth(1);
     await fileInput.setInputFiles(pngPath);
 
-    // Should show an error about file type
     await expect(page.locator('text=Please select an audio file')).toBeVisible({ timeout: 5000 });
   });
 });

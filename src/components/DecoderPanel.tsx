@@ -111,7 +111,6 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
         if (msg.type === 'error') {
           onError(msg.message);
         } else {
-          // Prefer real JPEG decode on the main thread; fall back to placeholder pixels.
           const imageUrl =
             (msg.jpegBytes && (await jpegBytesToDataUrl(msg.jpegBytes))) ||
             pixelsToDataUrl(msg.pixels, msg.width, msg.height);
@@ -166,9 +165,6 @@ export function DecoderPanel({ triggerUrl, onTriggerConsumed, onResult, onError,
       <div className="text-center mb-6 pb-5 border-b border-white/10">
         <h2 className="text-white text-xl font-semibold tracking-wide">Decoder</h2>
         <p className="text-white/40 text-xs mt-1">DRM Mode B · OFDM · 16-QAM</p>
-        <p className="text-amber-400/60 text-xs mt-1">
-          ⚠️ Best-effort — coarse sync only; real EasyPal recordings may not decode
-        </p>
       </div>
 
       <div className="mb-5 h-9 flex items-center justify-center gap-3 text-sm">

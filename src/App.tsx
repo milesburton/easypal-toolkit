@@ -127,13 +127,10 @@ export default function App() {
       <div className="w-full max-w-6xl mx-auto px-6 py-10">
         <header className="text-center mb-10">
           <h1 className="text-5xl font-bold mb-3 tracking-tight text-white drop-shadow-lg">
-            EasyPal Toolkit
+            DRM Studio
           </h1>
           <p className="text-sm text-white/50 tracking-widest uppercase font-medium">
-            Digital SSTV Decoder - Work in Progress
-          </p>
-          <p className="text-amber-400/70 text-xs mt-2">
-            ⚠️ Best-effort DRM implementation — real EasyPal recordings may not decode
+            Digital SSTV · DRM Mode B · OFDM · 16-QAM
           </p>
           <p className="text-white/30 text-xs mt-1">
             v{__APP_VERSION__} · {__BUILD_DATE__}

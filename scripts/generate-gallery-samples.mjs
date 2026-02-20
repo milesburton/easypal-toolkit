@@ -9,10 +9,10 @@
  *   or:      bun scripts/generate-gallery-samples.mjs
  */
 
-import { createCanvas } from 'canvas';
 import { writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createCanvas } from 'canvas';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -30,16 +30,33 @@ const K_MIN = -10;
 const K_MAX = 18;
 const NUM_CARRIERS = K_MAX - K_MIN + 1; // 29
 const TIME_PILOT_CARRIERS = [-9, -3, 4, 8, 12];
-const FREQ_PILOT_CELLS = [[0,-9],[0,8],[5,-3],[5,12],[10,4],[14,-9],[14,8]];
+const FREQ_PILOT_CELLS = [
+  [0, -9],
+  [0, 8],
+  [5, -3],
+  [5, 12],
+  [10, 4],
+  [14, -9],
+  [14, 8],
+];
 const PILOT_BOOST = Math.sqrt(2);
 const CONV_POLYNOMIALS = [0o133, 0o171, 0o145, 0o165, 0o117, 0o135];
 const CONV_STATES = 64;
 const PUNCTURE_MSC = [1, 1, 0, 1, 0, 0];
-// const PUNCTURE_FAC = [1, 1, 0, 1, 1, 0]; // unused in encoder
 const MSC_SEGMENT_BYTES = 800;
 const MSC_SEGMENT_HEADER_BYTES = 4;
-const FAC_CELLS = [[0, -7],[0, 6]];
-const SDC_CELLS = [[0,-6],[0,-5],[0,-4],[0,7],[0,9],[0,10]];
+const FAC_CELLS = [
+  [0, -7],
+  [0, 6],
+];
+const SDC_CELLS = [
+  [0, -6],
+  [0, -5],
+  [0, -4],
+  [0, 7],
+  [0, 9],
+  [0, 10],
+];
 
 // QAM16 constellation
 const QAM16_SCALE = 1 / Math.sqrt(10);
@@ -58,7 +75,10 @@ const QAM16_CONSTELLATION = (() => {
 })();
 
 const QAM4_CONSTELLATION = [
-  [+1, +1], [-1, +1], [-1, -1], [+1, -1]
+  [+1, +1],
+  [-1, +1],
+  [-1, -1],
+  [+1, -1],
 ].map(([i, q]) => [i / Math.SQRT2, q / Math.SQRT2]);
 
 // ── CRC ───────────────────────────────────────────────────────────────────────
@@ -144,12 +164,20 @@ function convEncode(bits, puncture) {
 
 function encodeFAC() {
   const bits = new Array(64).fill(0);
-  bits[0] = 0; bits[1] = 1; // Mode B
-  bits[2] = 0; bits[3] = 0; bits[4] = 0; // SO_0
+  bits[0] = 0;
+  bits[1] = 1; // Mode B
+  bits[2] = 0;
+  bits[3] = 0;
+  bits[4] = 0; // SO_0
   bits[5] = 0; // short interleaver
-  bits[6] = 0; bits[7] = 1; bits[8] = 1; // 16-QAM
-  bits[9] = 0; bits[10] = 0; bits[11] = 1; // 4-QAM SDC
-  bits[12] = 0; bits[13] = 0; // 1 service
+  bits[6] = 0;
+  bits[7] = 1;
+  bits[8] = 1; // 16-QAM
+  bits[9] = 0;
+  bits[10] = 0;
+  bits[11] = 1; // 4-QAM SDC
+  bits[12] = 0;
+  bits[13] = 0; // 1 service
   bits[14] = 1; // data
   bits[27] = 1; // service ID = 1
   const bytes = packBits(bits);
@@ -186,10 +214,13 @@ function segmentMSC(fileData) {
     const end = Math.min(start + maxPayload, fileData.length);
     const data = fileData.slice(start, end);
     const header = new Uint8Array(4);
-    header[0] = (i >> 8) & 0xff; header[1] = i & 0xff;
-    header[2] = (totalSegments >> 8) & 0xff; header[3] = totalSegments & 0xff;
+    header[0] = (i >> 8) & 0xff;
+    header[1] = i & 0xff;
+    header[2] = (totalSegments >> 8) & 0xff;
+    header[3] = totalSegments & 0xff;
     const combined = new Uint8Array(header.length + data.length);
-    combined.set(header); combined.set(data, header.length);
+    combined.set(header);
+    combined.set(data, header.length);
     const crc = crc16(combined);
     segments.push({ segNo: i, totalSegments, isLast: i === totalSegments - 1, data, crc });
   }
@@ -198,8 +229,10 @@ function segmentMSC(fileData) {
 
 function serialiseSegment(seg) {
   const buf = new Uint8Array(MSC_SEGMENT_HEADER_BYTES + seg.data.length + 2);
-  buf[0] = (seg.segNo >> 8) & 0xff; buf[1] = seg.segNo & 0xff;
-  buf[2] = (seg.totalSegments >> 8) & 0xff; buf[3] = seg.totalSegments & 0xff;
+  buf[0] = (seg.segNo >> 8) & 0xff;
+  buf[1] = seg.segNo & 0xff;
+  buf[2] = (seg.totalSegments >> 8) & 0xff;
+  buf[3] = seg.totalSegments & 0xff;
   buf.set(seg.data, MSC_SEGMENT_HEADER_BYTES);
   buf[buf.length - 2] = (seg.crc >> 8) & 0xff;
   buf[buf.length - 1] = seg.crc & 0xff;
@@ -213,9 +246,16 @@ function buildBijectiveFreqPermutation(n) {
   const perm = [];
   const used = new Array(n).fill(false);
   for (let i = 0; perm.length < n; i++) {
-    let rev = 0, x = i;
-    for (let b = 0; b < bits; b++) { rev = (rev << 1) | (x & 1); x >>= 1; }
-    if (rev < n && !used[rev]) { perm.push(rev); used[rev] = true; }
+    let rev = 0,
+      x = i;
+    for (let b = 0; b < bits; b++) {
+      rev = (rev << 1) | (x & 1);
+      x >>= 1;
+    }
+    if (rev < n && !used[rev]) {
+      perm.push(rev);
+      used[rev] = true;
+    }
   }
   return perm;
 }
@@ -225,7 +265,7 @@ const FREQ_PERM_24 = buildBijectiveFreqPermutation(24);
 const FREQ_GROUP_SIZES = [16, ...new Array(14).fill(24)];
 
 function freqInterleave(cells) {
-  const out = cells.map(c => [c[0], c[1]]);
+  const out = cells.map((c) => [c[0], c[1]]);
   let offset = 0;
   for (let sym = 0; sym < FREQ_GROUP_SIZES.length; sym++) {
     const groupSize = FREQ_GROUP_SIZES[sym];
@@ -257,8 +297,12 @@ function timeInterleave(cells, cols = 30) {
 function bitReverseFFT(re, im, n) {
   const bits = Math.log2(n);
   for (let i = 0; i < n; i++) {
-    let rev = 0, x = i;
-    for (let b = 0; b < bits; b++) { rev = (rev << 1) | (x & 1); x >>= 1; }
+    let rev = 0,
+      x = i;
+    for (let b = 0; b < bits; b++) {
+      rev = (rev << 1) | (x & 1);
+      x >>= 1;
+    }
     if (rev > i) {
       [re[i], re[rev]] = [re[rev], re[i]];
       [im[i], im[rev]] = [im[rev], im[i]];
@@ -271,22 +315,32 @@ function fft(re, im, n, inverse) {
   for (let len = 2; len <= n; len <<= 1) {
     const half = len >> 1;
     const angle = ((inverse ? 2 : -2) * Math.PI) / len;
-    const wRe = Math.cos(angle), wIm = Math.sin(angle);
+    const wRe = Math.cos(angle),
+      wIm = Math.sin(angle);
     for (let i = 0; i < n; i += len) {
-      let twRe = 1, twIm = 0;
+      let twRe = 1,
+        twIm = 0;
       for (let j = 0; j < half; j++) {
-        const u = i + j, v = u + half;
+        const u = i + j,
+          v = u + half;
         const tRe = twRe * re[v] - twIm * im[v];
         const tIm = twRe * im[v] + twIm * re[v];
-        re[v] = re[u] - tRe; im[v] = im[u] - tIm;
-        re[u] += tRe; im[u] += tIm;
+        re[v] = re[u] - tRe;
+        im[v] = im[u] - tIm;
+        re[u] += tRe;
+        im[u] += tIm;
         const next = twRe * wRe - twIm * wIm;
         twIm = twRe * wIm + twIm * wRe;
         twRe = next;
       }
     }
   }
-  if (inverse) { for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; } }
+  if (inverse) {
+    for (let i = 0; i < n; i++) {
+      re[i] /= n;
+      im[i] /= n;
+    }
+  }
 }
 
 // ── QAM mapping ───────────────────────────────────────────────────────────────
@@ -321,10 +375,12 @@ function ofdmModulate(dataCells) {
       const isTimePilot = TIME_PILOT_CARRIERS.includes(k);
       const isFreqPilot = FREQ_PILOT_CELLS.some(([s, kk]) => s === symIdx && kk === k);
       if (isTimePilot || isFreqPilot) {
-        re[bin] = PILOT_BOOST; im[bin] = 0;
+        re[bin] = PILOT_BOOST;
+        im[bin] = 0;
       } else {
         const cell = cells.get(ki);
-        re[bin] = cell?.re ?? 0; im[bin] = cell?.im ?? 0;
+        re[bin] = cell?.re ?? 0;
+        im[bin] = cell?.im ?? 0;
       }
     }
     fft(re, im, FFT_SIZE, true);
@@ -337,7 +393,10 @@ function ofdmModulate(dataCells) {
     }
   }
   const peak = output.reduce((m, v) => Math.max(m, Math.abs(v)), 0);
-  if (peak > 1e-9) { const s = 0.9 / peak; for (let i = 0; i < output.length; i++) output[i] *= s; }
+  if (peak > 1e-9) {
+    const s = 0.9 / peak;
+    for (let i = 0; i < output.length; i++) output[i] *= s;
+  }
   return output;
 }
 
@@ -401,7 +460,10 @@ function encodeJpegToDrmWav(jpegBytes) {
   const totalLen = payloadParts.reduce((a, b) => a + b.length, 0);
   const payload = new Uint8Array(totalLen);
   let offset = 0;
-  for (const part of payloadParts) { payload.set(part, offset); offset += part.length; }
+  for (const part of payloadParts) {
+    payload.set(part, offset);
+    offset += part.length;
+  }
 
   const payloadBits = unpackBits(payload);
   const encodedMSC = convEncode(payloadBits, PUNCTURE_MSC);
@@ -423,7 +485,10 @@ function encodeJpegToDrmWav(jpegBytes) {
   for (let sf = 0; sf < numSuperframes; sf++) {
     for (let f = 0; f < FRAMES_PER_SUPERFRAME; f++) {
       const frameNo = sf * FRAMES_PER_SUPERFRAME + f;
-      const mscFrameBits = paddedMSC.slice(frameNo * MSC_BITS_PER_FRAME, (frameNo + 1) * MSC_BITS_PER_FRAME);
+      const mscFrameBits = paddedMSC.slice(
+        frameNo * MSC_BITS_PER_FRAME,
+        (frameNo + 1) * MSC_BITS_PER_FRAME
+      );
 
       const mscCells = [];
       for (let i = 0; i < MSC_SLOTS.length; i++) {
@@ -467,10 +532,15 @@ function encodeJpegToDrmWav(jpegBytes) {
   const totalSamples = allFrames.reduce((a, b) => a + b.length, 0);
   const combined = new Float32Array(totalSamples);
   let pos = 0;
-  for (const frame of allFrames) { combined.set(frame, pos); pos += frame.length; }
+  for (const frame of allFrames) {
+    combined.set(frame, pos);
+    pos += frame.length;
+  }
 
   const durationS = totalSamples / SAMPLE_RATE;
-  console.log(`  WAV duration: ${durationS.toFixed(2)}s (${totalSamples} samples at ${SAMPLE_RATE} Hz)`);
+  console.log(
+    `  WAV duration: ${durationS.toFixed(2)}s (${totalSamples} samples at ${SAMPLE_RATE} Hz)`
+  );
   return writeWAV(combined, SAMPLE_RATE);
 }
 
@@ -501,7 +571,8 @@ function generateSample1(width = 160, height = 120) {
   ctx.strokeStyle = '#80cbc4';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(10, 46); ctx.lineTo(width - 10, 46);
+  ctx.moveTo(10, 46);
+  ctx.lineTo(width - 10, 46);
   ctx.stroke();
 
   // Info text
@@ -513,7 +584,7 @@ function generateSample1(width = 160, height = 120) {
 
   // Colour bars at bottom
   const barW = Math.floor(width / 7);
-  const colors = ['#f44336','#ff9800','#ffeb3b','#4caf50','#2196f3','#9c27b0','#ffffff'];
+  const colors = ['#f44336', '#ff9800', '#ffeb3b', '#4caf50', '#2196f3', '#9c27b0', '#ffffff'];
   colors.forEach((c, i) => {
     ctx.fillStyle = c;
     ctx.fillRect(i * barW, height - 22, barW, 22);
@@ -534,10 +605,16 @@ function generateSample2(width = 160, height = 120) {
   ctx.strokeStyle = '#1b5e20';
   ctx.lineWidth = 0.5;
   for (let x = 0; x < width; x += 16) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
   }
   for (let y = 0; y < height; y += 16) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
   }
 
   // Spectrum envelope (deterministic - no random)
@@ -551,7 +628,8 @@ function generateSample2(width = 160, height = 120) {
       amp = 0.4 + 0.25 * Math.sin((freq - 1500) * 0.05);
     }
     const y = height * 0.55 - amp * height * 0.35;
-    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   }
   ctx.stroke();
 

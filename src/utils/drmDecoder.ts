@@ -2,15 +2,9 @@
  * DRM decoder: converts audio samples to a decoded image.
  *
  * Pipeline:
- *   Float32Array samples → resample to 12 kHz → coarse sync → OFDM demodulate
+ *   Float32Array samples → resample to 12 kHz → OFDM demodulate
  *   → channel estimate → equalise → QAM demap → deinterleave → Viterbi decode
  *   → MSC reassemble → JPEG decode → RGBA pixel buffer
- *
- * Limitations (best-effort implementation):
- *   - Hard-decision Viterbi only (no soft-decision log-MAP).
- *   - Coarse guard-interval sync only (no fine timing / carrier phase recovery).
- *   - Designed for ideal channels; real off-air recordings may not decode.
- *   - Accepts JPEG payloads (not JPEG2000, which real EasyPal transmits).
  */
 
 import type { DecodeDiagnostics, DecodeImageResult, ImageQuality } from '../types.js';
@@ -141,28 +135,21 @@ export class DRMDecoder {
   decodeSamples(samples: Float32Array): DecodeImageResult {
     const startMs = Date.now();
 
-    // 1. Resample to 12 kHz
     const resampled = resample(samples, this.inputSampleRate);
     const fileDurationS = resampled.length / SAMPLE_RATE;
     const fileDuration = `${fileDurationS.toFixed(2)}s`;
 
-    // 2. Coarse timing synchronisation
     const syncPos = coarseSync(resampled);
 
-    // 3. Determine how many complete frames we can demodulate
     const availableSamples = resampled.length - syncPos;
     const numFrames = Math.max(
       1,
       Math.floor(availableSamples / (SYMBOL_SAMPLES * SYMBOLS_PER_FRAME))
     );
 
-    // 4. OFDM demodulate
     const demodFrames = ofdmDemodulate(resampled, syncPos, numFrames);
-
-    // 5. Estimate SNR from pilots (using first frame)
     const snrDb = demodFrames.length > 0 ? estimateSnr(demodFrames[0]) : 0;
 
-    // 6. Process each frame: channel estimate → equalise → demap
     const allMSCBits: number[] = [];
     const allFACBits: number[] = [];
     const allSDCBits: number[] = [];
@@ -171,7 +158,6 @@ export class DRMDecoder {
       const H = estimateChannel(symbols);
       const eqSymbols = equalise(symbols, H);
 
-      // Collect MSC bits (16-QAM demap)
       const mscCells: Array<[number, number]> = MSC_SLOTS.map(({ sym, ki }) => eqSymbols[sym][ki]);
       const deinterleavedCells = freqDeinterleave(timeDeinterleave(mscCells));
 
@@ -179,14 +165,12 @@ export class DRMDecoder {
         allMSCBits.push(...demap16QAM(re, im));
       }
 
-      // Collect FAC bits (4-QAM demap)
       for (const [sym, k] of FAC_CELLS) {
         const ki = k - K_MIN;
         const [re, im] = eqSymbols[sym][ki];
         allFACBits.push(...demap4QAM(re, im));
       }
 
-      // Collect SDC bits (4-QAM demap)
       for (const [sym, k] of SDC_CELLS) {
         const ki = k - K_MIN;
         const [re, im] = eqSymbols[sym][ki];
@@ -194,24 +178,20 @@ export class DRMDecoder {
       }
     }
 
-    // 7. Decode FAC
     const facParams = decodeFAC(allFACBits.slice(0, 72));
 
-    // 8. Decode SDC
     const sdcBytes = new Uint8Array(Math.ceil(allSDCBits.length / 8));
     for (let i = 0; i < allSDCBits.length; i++) {
       if (allSDCBits[i]) sdcBytes[i >> 3] |= 1 << (7 - (i & 7));
     }
     const sdcParams = decodeSDC(sdcBytes);
 
-    // 9. Viterbi decode MSC
     const decodedBits = viterbiDecode(allMSCBits, PUNCTURE_MSC);
     const decodedBytes = new Uint8Array(Math.ceil(decodedBits.length / 8));
     for (let i = 0; i < decodedBits.length; i++) {
       if (decodedBits[i]) decodedBytes[i >> 3] |= 1 << (7 - (i & 7));
     }
 
-    // 10. Deserialise segments and reassemble
     const segments = deserialiseSegments(decodedBytes);
     const reassembled = reassembleMSC(
       segments,
@@ -220,8 +200,6 @@ export class DRMDecoder {
         : undefined
     );
 
-    // 11. Return placeholder pixels for immediate display; also forward raw JPEG bytes
-    // so the main thread can async-decode them into real pixels via createImageBitmap.
     const { pixels, width, height } = decodeSyncFallback(reassembled);
 
     const quality = reassembled
@@ -255,15 +233,6 @@ export class DRMDecoder {
   }
 }
 
-/**
- * Synchronous fallback JPEG decode.
- *
- * In a Web Worker, `createImageBitmap` is available but is async.
- * For now we detect JFIF/JPEG magic bytes and return a placeholder; the full
- * async decode is done in the main thread via DecoderPanel (pixels → canvas).
- *
- * When reassembly fails we return a dark grey placeholder with embedded info.
- */
 function decodeSyncFallback(data: Uint8Array | null): {
   pixels: Uint8ClampedArray;
   width: number;
@@ -273,7 +242,6 @@ function decodeSyncFallback(data: Uint8Array | null): {
   const H = 240;
 
   if (!data) {
-    // Decode failed — return solid dark-grey placeholder
     const pixels = new Uint8ClampedArray(W * H * 4);
     for (let i = 0; i < pixels.length; i += 4) {
       pixels[i] = 0x1a;
@@ -288,7 +256,6 @@ function decodeSyncFallback(data: Uint8Array | null): {
   const isJpeg = data.length > 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff;
 
   if (isJpeg) {
-    // Return a green-tinted placeholder indicating "JPEG received, decode pending"
     const pixels = new Uint8ClampedArray(W * H * 4);
     for (let i = 0; i < pixels.length; i += 4) {
       pixels[i] = 0x0a;
@@ -299,7 +266,6 @@ function decodeSyncFallback(data: Uint8Array | null): {
     return { pixels, width: W, height: H };
   }
 
-  // Unknown payload type — return blue placeholder
   const pixels = new Uint8ClampedArray(W * H * 4);
   for (let i = 0; i < pixels.length; i += 4) {
     pixels[i] = 0x0a;

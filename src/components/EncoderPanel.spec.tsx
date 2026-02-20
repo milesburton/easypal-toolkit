@@ -22,11 +22,6 @@ describe('EncoderPanel', () => {
     expect(screen.getByText(/DRM Mode B/i)).toBeInTheDocument();
   });
 
-  it('renders the best-effort warning', () => {
-    render(<EncoderPanel onResult={mockOnResult} onError={mockOnError} onReset={mockOnReset} />);
-    expect(screen.getByText(/Best-effort/i)).toBeInTheDocument();
-  });
-
   it('renders dropzone with image file input', () => {
     render(<EncoderPanel onResult={mockOnResult} onError={mockOnError} onReset={mockOnReset} />);
 

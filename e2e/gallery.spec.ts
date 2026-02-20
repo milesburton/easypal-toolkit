@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Gallery', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText('EasyPal Toolkit');
+    await expect(page.locator('h1')).toContainText('DRM Studio');
   });
 
   test('gallery section is visible with example cards', async ({ page }) => {
@@ -46,7 +46,6 @@ test.describe('Gallery', () => {
     await expect(tryButtons.first()).toBeVisible();
     await tryButtons.first().click();
 
-    // Gallery WAVs are DRM-encoded by our encoder; they must decode successfully.
     await expect(page.locator('text=Decoded successfully')).toBeVisible({ timeout: 120000 });
   });
 
