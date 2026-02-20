@@ -38,9 +38,9 @@ test.describe('Decoder', () => {
 
     await expect(page.locator('text=Decoded successfully')).toBeVisible({ timeout: 120000 });
 
-    // Diagnostics panel should show DRM mode info
-    await expect(page.locator('text=DRM')).toBeVisible();
-    await expect(page.locator('text=12000').or(page.locator('text=12 000'))).toBeVisible();
+    // Diagnostics panel should show DRM mode and sample rate
+    await expect(page.getByText('12000 Hz')).toBeVisible();
+    await expect(page.getByText(/DRM Mode B/i).first()).toBeVisible();
   });
 
   test('decoder rejects a non-audio file with an error', async ({ page }) => {

@@ -33,18 +33,17 @@ test.describe('Encoder', () => {
     await expect(chooseBtn).toBeVisible();
   });
 
-  test('encoder accepts an image file and produces a WAV download', async ({ page }) => {
+  test('encoder accepts an image file and shows "Encoded successfully"', async ({ page }) => {
     test.setTimeout(120000);
 
     const jpegPath = makeTempJpeg();
 
-    // Wait for file input
     const fileInput = page.locator('input[type="file"]').first();
     await fileInput.setInputFiles(jpegPath);
 
-    // Wait for encode result: a download link for a WAV file
-    const downloadLink = page.locator('a[download][href*=".wav"], a[download][href*="blob:"]').first();
-    await expect(downloadLink).toBeVisible({ timeout: 90000 });
+    // After encoding, the result panel shows this message and a Download WAV button.
+    await expect(page.locator('text=Encoded successfully')).toBeVisible({ timeout: 90000 });
+    await expect(page.getByRole('button', { name: 'Download WAV' })).toBeVisible();
   });
 
   test('encoder rejects a non-image file with an error', async ({ page }) => {
