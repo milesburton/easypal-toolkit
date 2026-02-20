@@ -267,6 +267,17 @@ export default function App() {
         )}
 
         <GalleryPanel onTryDecode={setDecodeUrl} />
+
+        <footer className="text-center text-white/40 py-6 text-sm">
+          <a
+            href="https://github.com/milesburton/easypal-toolkit"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/60 hover:text-white transition-colors font-medium"
+          >
+            View on GitHub
+          </a>
+        </footer>
       </div>
     </>
   );
