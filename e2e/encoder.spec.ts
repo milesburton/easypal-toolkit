@@ -1,8 +1,8 @@
+import { writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { createCanvas } from 'canvas';
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 
 /** Create a minimal JPEG test file on disk for upload. */
 function makeTempJpeg(): string {
@@ -25,11 +25,14 @@ test.describe('Encoder', () => {
   });
 
   test('encoder panel is visible with a file input', async ({ page }) => {
-    const encoderSection = page.locator('section').filter({ hasText: /Encode|Encoder/i }).first();
-    await expect(encoderSection).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Encoder' })).toBeVisible();
 
-    // There should be a file chooser button
-    const chooseBtn = encoderSection.getByRole('button', { name: /Choose File/i });
+    // The first file input belongs to the encoder
+    const fileInput = page.locator('input[type="file"]').first();
+    await expect(fileInput).toBeAttached();
+
+    // And its "Choose File" button is visible
+    const chooseBtn = page.getByRole('button', { name: /Choose File/i }).first();
     await expect(chooseBtn).toBeVisible();
   });
 
